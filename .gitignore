@@ -1,0 +1,8 @@
+# Local credentials and exports
+.env
+.env.*
+!.env.example
+*credentials*.json
+*execution*.json
+VA Masters - Remotive Job Import.json
+.DS_Store

@@ -1,0 +1,286 @@
+{
+  "name": "Remotive Recruitment Job Import (Portfolio Template)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "055c3611-8293-591c-9e22-f3100bc094ea",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://remotive.com/api/remote-jobs?limit=10",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "907d5082-e469-5da1-9aaf-63d8d027e777",
+      "name": "HTTP Request",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "jobs",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "454ab4b6-ff18-5f80-b0a2-b4a72fb9c637",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e09094d7-eac7-5bf4-a6ee-57d292d088cb",
+              "name": "External Job ID",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "366dab28-215a-5aca-a8eb-64aae9563b5c",
+              "name": "Job Title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "7bf4e61b-1893-50f4-a6f9-ce893345e9dc",
+              "name": "Company Name",
+              "value": "={{ $json.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "0a3d9311-9b8d-5624-b243-86bdd513898c",
+              "name": "Job URL",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "9634a489-d00c-56f5-a8a0-44ce7165801d",
+              "name": "Job Type",
+              "value": "={{ $json.job_type }}",
+              "type": "string"
+            },
+            {
+              "id": "0e15e338-26a4-5f94-bd84-1183b6a07ddd",
+              "name": "Required Location",
+              "value": "={{ $json.candidate_required_location }}",
+              "type": "string"
+            },
+            {
+              "id": "4faf983d-fa9f-5186-97c7-df59b13b6d44",
+              "name": "Salary",
+              "value": "={{ $json.salary || \"Not specified\" }}",
+              "type": "string"
+            },
+            {
+              "id": "486db3eb-f3fc-5e6e-8ae3-d9c3036a7254",
+              "name": "Publication Date",
+              "value": "={{ $json.publication_date }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "9072d156-4290-51d4-b750-1167ff616de5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "86d63329-0de3-53eb-b71e-a446d1ff20d6",
+              "leftValue": "={{ $json[\"Job Title\"] }}",
+              "rightValue": "=Content",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "934459d7-c8b0-53d8-88e9-c5e908eaf363",
+              "leftValue": "={{ $json[\"Company Name\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "376e2958-8308-5ada-8e8c-7b900fb726c8",
+              "leftValue": "={{ $json[\"Job URL\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "960845cc-a3c0-5b16-952e-076f1e6898e6",
+              "leftValue": "={{ $json[\"External Job ID\"] }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        816,
+        0
+      ],
+      "id": "24fedae1-d048-599e-a6b9-0c385d75f13e",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_AIRTABLE_BASE_ID",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_JOB_OPENINGS_TABLE_ID",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "External Job ID": "={{ $json[\"External Job ID\"] }}",
+            "Job Title": "={{ $json[\"Job Title\"] }}",
+            "Company Name": "={{ $json[\"Company Name\"] }}",
+            "Job Source": "Remotive",
+            "Job URL": "={{ $json[\"Job URL\"] }}",
+            "Job Type.": "={{ $json[\"Job Type\"] }}",
+            "Publication Date": "={{ $json[\"Publication Date\"] }}",
+            "Required Location": "={{ $json[\"Required Location\"] }}",
+            "Salary": "={{ $json[\"Salary\"] }}"
+          },
+          "matchingColumns": [
+            "External Job ID"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "fe057b1c-0b8e-5e98-b637-df3290545564",
+      "name": "Create or update a record",
+      "executeOnce": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Create or update a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or update a record": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  }
+}
